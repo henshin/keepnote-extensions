@@ -25,6 +25,7 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+from HTMLParser import HTMLParser
 
 from pygments import highlight
 from pygments.lexers import guess_lexer, guess_lexer_for_filename
@@ -126,7 +127,6 @@ class DialogSyntaxHighlight(object):
     def insert_it(self, text, lang):
         editor = self.window.get_viewer().get_editor()
         textview = editor._textview
-
         try:
             if lang == self.automatic:
                 lexer = guess_lexer(text)
@@ -137,6 +137,12 @@ class DialogSyntaxHighlight(object):
         else:
             formatter = HtmlFormatter(noclasses=True, lineseparator="<br>")
             result = highlight(text, lexer, formatter)
+            #fix encoding
+            html=HTMLParser()
+            result = html.unescape(result)
+            #fix leading spaces
+            result = result.replace("\x09","&nbsp;&nbsp;&nbsp;&nbsp;")
+            result = result.replace("    ","&nbsp;&nbsp;&nbsp;&nbsp;")
             textview.insert_html(result)
     
     def on_from_file_button_clicked(self, button):
@@ -181,6 +187,8 @@ class DialogSyntaxHighlight(object):
     def reinitialize(self):
         self.textview.get_buffer().set_text("")
         self.lang_selector.set_active(0)
+        #always focus on the combo box
+        self.lang_selector.grab_focus()
 
     def show(self):
         self.dialog.show_all()
