@@ -31,6 +31,7 @@ from pygments import highlight
 from pygments.lexers import guess_lexer, guess_lexer_for_filename
 from pygments.lexers import get_lexer_by_name, get_all_lexers
 from pygments.formatters import HtmlFormatter
+from pygments.styles import get_all_styles
 from pygments.util import ClassNotFound
 
 def get_file_content(filename):
@@ -69,6 +70,10 @@ class DialogSyntaxHighlight(object):
         self.lang_selector = self.create_lang_selector()  
         vbox.pack_start(self.lang_selector, False)
 
+        vbox.pack_start(gtk.Label("Select Style:"), False)
+        self.style_selector = self.create_style_selector()  
+        vbox.pack_start(self.style_selector, False)
+
         self.from_file_button = gtk.Button("From file...")
         vbox.pack_start(self.from_file_button, False)
         
@@ -104,7 +109,31 @@ class DialogSyntaxHighlight(object):
                 l.append(aliases[0])
         l.sort()
         return l
-    
+
+    def create_style_selector(self):
+        style_selector = gtk.combo_box_entry_new_text()
+        
+        completion = gtk.EntryCompletion()
+        completion.set_model(style_selector.get_model())
+        completion.set_minimum_key_length(1)
+        completion.set_text_column(0) 
+
+        style_selector.child.set_completion(completion)
+        default=0
+        for idx,name in self.get_style_names():
+            style_selector.append_text(name)
+            if(name=="default"):
+                default=idx
+        style_selector.set_active(defaultidx)
+
+        return style_selector
+
+    def get_style_names(self):
+        l = []        
+        for idx,name in enumerate(get_all_styles()):
+            l.append(idx,name)
+        return l.sort()
+
     def create_scrolled_textview(self):
         textview = gtk.TextView(gtk.TextBuffer())
         scrolledwindow = gtk.ScrolledWindow()
@@ -121,10 +150,11 @@ class DialogSyntaxHighlight(object):
         start, end = self.textview.get_buffer().get_bounds()
         text = self.textview.get_buffer().get_text(start, end)
         lang = self.lang_selector.get_active_text()
-        self.insert_it(text.decode(), lang)
+        style = self.style_selector.get_active_text()
+        self.insert_it(text.decode(), lang, style)
         self.hide()
 
-    def insert_it(self, text, lang):
+    def insert_it(self, text, lang, style):
         editor = self.window.get_viewer().get_editor()
         textview = editor._textview
         try:
@@ -135,7 +165,7 @@ class DialogSyntaxHighlight(object):
         except ClassNotFound:
             textview.insert_html(text)
         else:
-            formatter = HtmlFormatter(noclasses=True, lineseparator="<br>")
+            formatter = HtmlFormatter(noclasses=True, lineseparator="<br>",style=style)
             result = highlight(text, lexer, formatter)
             #fix encoding
             html=HTMLParser()
