@@ -119,20 +119,21 @@ class DialogSyntaxHighlight(object):
         completion.set_text_column(0) 
 
         style_selector.child.set_completion(completion)
-        default=0
-        for idx,name in self.get_style_names():
+        defaultidx=0
+        for idx,name in enumerate(self.get_style_names()):
             style_selector.append_text(name)
             if(name=="default"):
-                default=idx
+                defaultidx=idx
         style_selector.set_active(defaultidx)
 
         return style_selector
 
     def get_style_names(self):
         l = []        
-        for idx,name in enumerate(get_all_styles()):
-            l.append(idx,name)
-        return l.sort()
+        for name in get_all_styles():
+            l.append(name)
+        l.sort()
+        return l
 
     def create_scrolled_textview(self):
         textview = gtk.TextView(gtk.TextBuffer())
