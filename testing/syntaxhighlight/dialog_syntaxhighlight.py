@@ -169,10 +169,10 @@ class DialogSyntaxHighlight(object):
             formatter = HtmlFormatter(noclasses=True, lineseparator="<br>",style=style)
             result = highlight(text, lexer, formatter)
             #fix encoding
-            html=HTMLParser()
-            result = html.unescape(result)
+            result = result.replace("&quot;",'"');
+            result = result.replace("&#39;","'");
             #fix leading spaces
-            result = result.replace("\x09","&nbsp;&nbsp;&nbsp;&nbsp;")
+            result = result.replace("\x09",'&#09;')
             result = result.replace("    ","&nbsp;&nbsp;&nbsp;&nbsp;")
             textview.insert_html(result)
     
